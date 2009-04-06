@@ -2,6 +2,8 @@ h1. RipperHUD and related tools
 
 This toolkit and mini-Sinatra app are a collection of scripts and utilities I've put together to improve/automate my DVD ripping workflow as much as possible. The aim is to get encoded DVD rips and downloaded movies/tv shows organised and added to the Plex media library as easily as possible.
 
+*NOTE*: All of this is quite specific to my individual needs; I'm publishing it as it may be useful to somebody else. The best way of using this is to fork it and modify to your hearts content. I welcome any push requests that add useful generic functionality but don't be offended if I don't respond to all of them.
+
 Other tools that I use as part of this process are:
 
 * "taskspooler":http://vicerveza.homeunix.net/~viric/soft/ts/, a Unix command-line utility for queuing commands,

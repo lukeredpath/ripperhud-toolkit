@@ -1,0 +1,54 @@
+%h1 DVD Rip List
+
+%table{:id => 'key'}
+  %tr
+    %td.new New
+    %td.pending Pending
+    %td.queued Enqueued
+    %td.running Running
+
+- for rip in @rips
+  %form{:action => '/process', :method => 'post'}
+    %table{:class => @ripperhud.class_for_rip(rip)}
+      %colgroup
+        %col.name
+        %col.type
+        %col.season
+        %col.episodes
+      %tr
+        %th{:colspan => 7, :class => 'rip'}= File.basename(rip)
+      %tr
+        %th{:colspan => 2} Required
+        %th{:colspan => 4} TV Show Details
+        %th
+      %tr
+        %td
+          %label Name
+          %input{:type => 'text', :size => 25, :name => 'ripper[name]'}
+        %td
+          %label Type
+          %select{:name => 'ripper[type]'}
+            %option{:value => 'film'} Film
+            %option{:value => 'tv'} TV
+            %option{:value => 'tv_anim'} TV (Animated)
+        %td
+          %label Season
+          %input{:type => 'text', :size => 2, :name => 'ripper[season]'}
+        %td
+          %label Episodes
+          %input{:type => 'text', :size => 2, :name => 'ripper[episode_from]'}
+          %label to
+          %input{:type => 'text', :size => 2, :name => 'ripper[episode_to]'}
+        %td
+          %label Episode Length
+          %input{:type => 'text', :size => 4, :name => 'ripper[duration]'}
+          %label +/-
+          %input{:type => 'text', :size => 2, :name => 'ripper[duration_variance]', :value => 2}
+        %td
+          %label Skip first
+          %input{:type => 'text', :size => 1, :name => 'ripper[track_offset]', :value => 0}
+          %label tracks
+        %td
+          %input{:type => 'hidden', :value => rip, :name => 'filename'}
+          %input{:type => 'submit', :value => 'Process'}
+            

@@ -1,0 +1,132 @@
+#!/usr/bin/env ruby -W0
+require 'rubygems'
+require 'trollop'
+
+# TODO:
+# => Handle DVD input does not exist
+
+options = Trollop.options do
+  opt :input_file, "Input DVD image", :type => :string, :default => nil
+  opt :input_type, "Input type - film, tv, tv_anim", :type => :string, :default => nil
+  opt :name, "Show/Film name", :type => :string, :default => nil
+  opt :episode_duration, "Average episode duration", :type => :int, :default => nil
+  opt :episode_range, "Episode range", :type => :string, :default => nil
+  opt :season, "Season number", :type => :int, :default => nil
+  opt :duration_variance, "Duration variance", :type => :int, :default => 2
+  opt :track_offset, "Ignore the first x tracks", :type => :int, :default => 0
+end
+
+OUTPUT_DIRECTORY = "/Volumes/Media/Movies/Encodes"
+FINISHED_DIRECTORY = "/Volumes/Media/Movies/New"
+HANDBRAKE_CLI = "/usr/local/bin/HandBrakeCLI"
+TS_PATH = "/usr/local/bin/ts"
+
+def handbrake_cmd(input, output_file, type, title=nil)
+  options = case type
+  when "film"
+    "--preset='Normal' -b2000 --longest -o #{output_file}"
+  when "tv"
+    "--preset='Normal' -t#{title} -o #{output_file}"
+  when "tv_anim"
+    "--preset='Animation' -t#{title} -o #{output_file}"
+  end
+  "#{HANDBRAKE_CLI} #{options} -i '#{input}'"
+end
+
+def queue_cmd(command, args='')
+  system("#{TS_PATH} #{args} #{command} > /dev/null")
+end
+
+def do_rip!(input, output_file, type, title=nil)
+  queue_cmd(handbrake_cmd(input, output_file, type, title)) &&
+  queue_cmd("mv #{output_file} #{FINISHED_DIRECTORY}", '-dn')
+end
+
+def extension_for_type(type)
+  case type
+  when "film", "tv_anim"
+    "mkv"
+  when "tv"
+    "m4v"
+  end
+end
+
+class Title
+  attr_reader :index
+  attr_accessor :duration
+  
+  def initialize(index)
+    @index = index
+  end
+  
+  def duration_in_minutes
+    hours, minutes, seconds = *duration.scan(/\d{2}/).map { |p| p.to_i }
+    (hours * 60) + minutes + (seconds >= 30 ? 1 : 0)
+  end
+end
+
+class Episode
+  attr_accessor :title
+  
+  def initialize(show, season, episode)
+    @show = show
+    @season, @episode = season, episode
+  end
+  
+  def output_file_name
+    "#{@show.gsub(/\s/, '.')}.S#{@season.to_s.rjust(2,'0')}E#{@episode.to_s.rjust(2,'0')}"
+  end
+end
+
+if options[:input_type] == "film"
+  output = File.join(OUTPUT_DIRECTORY, options[:name].gsub(/\s/, '.'))
+  if queue_cmd(handbrake_cmd(options[:input_file], output, options[:input_type]))
+    queue_cmd("mv #{File.join(OUTPUT_DIRECTORY, '*')} #{FINISHED_DIRECTORY}")
+    puts "+ Added #{File.basename(options[:input_file])} main feature to the encoding queue."
+  end
+else
+  puts "** Scanning #{File.basename(options[:input_file])} for episodes."
+
+  dvd_info = `#{HANDBRAKE_CLI} -i "#{options[:input_file]}" -t0 2>&1`
+  titles = dvd_info.split("\n").grep(/^\s*\+/).inject([]) do |titles, line|
+    if line =~ /^\+ title (\d+):/
+      title = titles << Title.new($1.to_i)
+    else
+      title = titles.last
+    end
+    if line =~ /\+ duration: (.*)/
+      title.duration = $1
+    end
+    titles
+  end
+
+  episode_duration_range = Range.new(
+    options[:episode_duration] - options[:duration_variance], 
+    options[:episode_duration] + options[:duration_variance]
+  )
+  episode_titles = titles.select do |title| 
+    episode_duration_range.include?(title.duration_in_minutes)
+  end
+  
+  episode_range = eval(options[:episode_range])
+p episode_range.to_a.length
+p episode_titles
+  if (episode_titles.length - options[:track_offset]) < episode_range.to_a.length
+    puts "Not enough titles for given episode range!"
+    exit 1
+  end
+
+  episodes = []
+  episode_range.each_with_index do |episode_number, index|
+    episode = Episode.new(options[:name], options[:season], episode_number)
+    episode.title = episode_titles[index + options[:track_offset]]
+    episodes << episode
+  end
+
+  episodes.each do |e|
+    output_file = File.join(OUTPUT_DIRECTORY, e.output_file_name) + ".#{extension_for_type(options[:input_type])}"
+    if do_rip!(options[:input_file], output_file, options[:input_type], e.title.index)
+      puts "  + Added #{e.output_file_name} to the encoding queue."
+    end
+  end
+end

@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+
+in_folder = "/Volumes/Media/Downloads/Completed"
+out_folder = "/Volumes/Media/Movies/New"
+
+Dir[File.join(in_folder, "**/*")].each do |file|
+  if File.extname(file) =~ /avi|mov|mkv|mpg|mp4|m4v/
+    FileUtils.mv(file, File.join(out_folder, File.basename(file)))
+  end
+end

@@ -19,17 +19,17 @@ I use a Mac Mini as my media server. The plan is to install Plex on this machine
 
 h2. Processing downloads
 
-This is the simplest part. I get new torrents on to my Mac Mini several different ways; I keep Transmission running on the Mac Mini monitoring my Downloads folder for new torrent files. I also run the TVShows daemon to assist with downloading of torrents for new episodes. On my primary machine (my MacBook), I run Hazel:"http://www.noodlesoft.com/hazel.php", having it monitor my Macbook's downloads folder for any torrents, which is transfers over to the Mac Mini Downloads folder for processing automatically.
+This is the simplest part. I get new torrents on to my Mac Mini several different ways; I keep Transmission running on the Mac Mini monitoring my Downloads folder for new torrent files. I also run the TVShows daemon to assist with downloading of torrents for new episodes. On my primary machine (my MacBook), I run "Hazel":http://www.noodlesoft.com/hazel.php, having it monitor my Macbook's downloads folder for any torrents, which are transferred over to the Mac Mini Downloads folder for processing automatically.
 
-All completed downloads are moved into a "New" folder by Transmission, ready to be organised.
+All completed downloads are moved into a "Completed" folder by Transmission, ready to be organised. A simple Ruby script called "downloadmonitor" moves any movie files from this "Completed" folder to a "New Movies" folder ready to be organised.
 
 h2. Processing DVD rips
 
-Running RipIt, I can continue to replace DVDs and they are automatically ripped as *.dvdmedia files. Once they are ripped, they need to be processed and individual tracks encoded using a combination of HandBrakeCLI, my custom ripper script and the RipperHUD Sinatra app. This process is explained in more detail below. Encoded movies are moved to the "New" folder, ready to be organised.
+Running RipIt, I can continue to replace DVDs and they are automatically ripped as *.dvdmedia files. Once they are ripped, they need to be processed and individual tracks encoded using a combination of HandBrakeCLI, my custom ripper script and the RipperHUD Sinatra app. This process is explained in more detail below. Encoded movies are moved to the "New Movies" folder, ready to be organised.
 
 h2. Processing "New" movies
 
-The media-mover script is configured using launchd to monitor new files in the "New" folder. If the file looks like a TV show (e.g. "Some.Show.SXXEXX.avi"), media-mover will create folders for the show name and season in a specified location and move the file there. It will optionally inform the Plex media server of the new file. Example:
+The media-mover script is configured using launchd to monitor new files in the "New Movies" folder. If the file looks like a TV show (e.g. "Some.Show.SxxExx.avi"), media-mover will create folders for the show name and season in a specified location and move the file there. It will optionally inform the Plex media server of the new file. Example:
 
 The.Wire.S01E03.releasegroup.avi > The Wire/Season 1/The.Wire.S01.E03.avi
 
@@ -43,7 +43,7 @@ Most of the DVD ripping process can be automated too but there is one step that 
 
 h3. The 'ripper' utility
 
-This is where my custom "ripper" script comes in. It is essentially a wrapper around HandBrakeCLI with some pre-configured encoding settings for TV shows, animated TV shows and films. However its main utility is to take a given DVD rip, a show name and a range of episodes and analyse a DVD image for the tracks that are most likely to be the episode tracks. It then enqueus a HandBrakeCLI command for each episode using taskspooler. This makes it really easy to build up a queue of encodes for each ripped DVD without having to manually analyse each one using the HandBrakeCLI. This is best illustrated with an example:
+This is where my custom "ripper" script comes in. It is essentially a wrapper around HandBrakeCLI with some pre-configured encoding settings for TV shows, animated TV shows and films. However its main utility is to take a given DVD rip, a show name and a range of episodes and analyse a DVD image for the tracks that are most likely to be the episode tracks. It then enqueus a HandBrakeCLI command for each episode using taskspooler. This makes it really easy to build up a queue of encodes for each ripped DVD without having to manually analyse each one using the HandBrake CLI or GUI. This is best illustrated with an example:
 
   $ ripper -i familyguy1disc1.dvdmedia -n tv_anim -name "Family Guy" --episode-range 1..4 --season 1 --episode-duration 22
 
@@ -54,7 +54,7 @@ The above command will take the given dvdmedia DVD image and analyse it for all 
 * Family.Guy.S01E03.m4v
 * Family.Guy.S01E04.m4v
 
-These will be moved to a specified folder (this should be set to the "new" folder) where they are ready to be organised.
+These will be moved to a specified folder (this should be set to the "new movies" folder) where they are ready to be organised.
 
 Because the script uses taskspooler, you can process as many DVD images as you like and an encode for each episode will be queued up.
 
@@ -69,9 +69,7 @@ The HandBrakeCLI commands are configured to use the built-in HandBrake encoding 
 
 h3. RipperHUD
 
-This is a small, simple Sinatra application that can be run from any machine on your network. It reads a folder on your ripping station for new dvdmedia files and presents a web-based UI for queuing up 'ripper' commands for each one. A screenshot can be found here:
-
-http://skitch.com/lukeredpath/bkqwq/picture-2
+This is a small, simple Sinatra application that can be run from any machine on your network. It reads a folder on your ripping station for new dvdmedia files and presents a web-based UI for queuing up 'ripper' commands for each one. A screenshot can be found "here":http://skitch.com/lukeredpath/bkqwq/picture-2.
 
 It should be pretty self-explanatory. You can run the app from the command line:
 

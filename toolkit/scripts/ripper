@@ -109,8 +109,7 @@ else
   end
   
   episode_range = eval(options[:episode_range])
-p episode_range.to_a.length
-p episode_titles
+
   if (episode_titles.length - options[:track_offset]) < episode_range.to_a.length
     puts "Not enough titles for given episode range!"
     exit 1

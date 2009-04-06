@@ -43,7 +43,7 @@ h3. The 'ripper' utility
 
 This is where my custom "ripper" script comes in. It is essentially a wrapper around HandBrakeCLI with some pre-configured encoding settings for TV shows, animated TV shows and films. However its main utility is to take a given DVD rip, a show name and a range of episodes and analyse a DVD image for the tracks that are most likely to be the episode tracks. It then enqueus a HandBrakeCLI command for each episode using taskspooler. This makes it really easy to build up a queue of encodes for each ripped DVD without having to manually analyse each one using the HandBrakeCLI. This is best illustrated with an example:
 
-$ ripper -i familyguy1disc1.dvdmedia -n tv_anim -name "Family Guy" --episode-range 1..4 --season 1 --episode-duration 22
+  $ ripper -i familyguy1disc1.dvdmedia -n tv_anim -name "Family Guy" --episode-range 1..4 --season 1 --episode-duration 22
 
 The above command will take the given dvdmedia DVD image and analyse it for all tracks that have a duration of 22 minutes (and by default, give or take 2 minutes). If it finds enough tracks to cover the range of episode numbers given (in this case episodes 1 to 4 or season 1), it will enqueue a HandBrakeCLI command for each track using each episode number in the range given. Using the TV show name and season given, the eventual output will be the files:
 
@@ -60,8 +60,8 @@ There are a few advanced options; you can specify the duration variance if episo
 
 You can also specify a track offset if you want to ignore the first X tracks on a DVD that look like episodes (useful if you have episodes from multiple seasons on a disc that need to be processed separately). For instance, if a disc has episodes 9 and 10 of season 2 and episodes 1 and 2 of season 3, you could do something like this:
 
-$ ripper -i someimage.dvdmedia -n tv -name "Some Show" --episode-range 9..10 --season 2 --episode-duration 22
-$ ripper -i someimage.dvdmedia -n tv -name "Some Show" --episode-range 1..2 --season 3 --episode-duration 22 --track-offset 2
+  $ ripper -i someimage.dvdmedia -n tv -name "Some Show" --episode-range 9..10 --season 2 --episode-duration 22
+  $ ripper -i someimage.dvdmedia -n tv -name "Some Show" --episode-range 1..2 --season 3 --episode-duration 22 --track-offset 2
 
 The HandBrakeCLI commands are configured to use the built-in HandBrake encoding presets that I've found to be best for my needs; you may want to customise these. There isn't currently a way of specifying additional encoding parameters using ripper from the command-line; please feel free to fork and add this stuff.
 
@@ -73,6 +73,6 @@ http://skitch.com/lukeredpath/bkqwq/picture-2
 
 It should be pretty self-explanatory. You can run the app from the command line:
 
-$ ruby ripperhud.rb
+  $ ruby ripperhud.rb
 
 This will start up a web server on port 4567. You will currently need to modify the script itself to tell it the IP address of your ripping station machine, the user and which folder to monitor. It will establish an SSH connection to the machine to run remote commands. There isn't any support for password-based authentication so make sure you set up some SSH keys. It also uses taskspooler to enqueue the 'ripper' commands with a high priority meaning they will always be the next task to be run.
